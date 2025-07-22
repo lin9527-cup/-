@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生成绩查询系统</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .search-box {
+            background: #f4f4f4;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result, .best-student {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .best-student {
+            background-color: #e8f5e9; /* 浅绿色背景 */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .trophy-icon {
+            color: gold;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>学生成绩查询系统</h1>
+    
+    <!-- 最佳学生展示板块 -->
+    <div class="best-student" id="bestStudent">
+        <h2><span class="trophy-icon">🏆</span> 本周最佳学生 <span class="trophy-icon">🏆</span></h2>
+        <div id="bestStudentInfo">正在计算最佳学生...</div>
+    </div>
+
+    <div class="search-box">
+        <h2>查询学生成绩</h2>
+        <input type="text" id="searchName" placeholder="请输入学生姓名">
+        <button onclick="searchStudent()">查询</button>
+    </div>
+    
+    <div id="result" class="result">
+        <h2>查询结果</h2>
+        <div id="studentInfo"></div>
+    </div>
+
+    <script>
+        const studentData = [
+            { name: "何瑾彤", math: 47.5, english: null, comment: "做试卷的时候不够认真，需要集中精神面对试卷的每一道题。" },
+            { name: "何瑾谦", math: null, english: 40, comment: "英语基础低，可以通过每日记背5个单词进行积累" },
+            { name: "宁发荣", math: 36, english: null, comment: "基础不牢，知识综合运用能力弱是主要问题" },
+            { name: "刘雨芯", math: null, english: null, comment: "暂未考" },
+            { name: "危彦鸿", math: null, english: null, comment: "暂未考" },
+            { name: "廖熙豪", math: 44, english: null, comment: "基础不牢是大问题，从计算到概念再到应用，都得逐个突破，多练习、多总结，把漏洞补上，数学才能越学越好呀！" },
+            { name: "李辰旭", math: null, english: 60, comment: "语法基础薄弱、词汇运用不熟练、阅读和写作能力待提升是主要问题。" },
+            { name: "杨玉丹", math: 91, english: null, comment: "对简单概念、基础运算（如代入求值、新定义运算 ）有一定基础，部分几何、函数基础题能正确列式。" },
+            { name: "毛乾豪", math: null, english: 21, comment: "有基础学习成果，但语法、句型、阅读深度、写作需系统提升，按上述方法坚持练习，英语能力会逐步提升，为后续学习打好基础 。" },
+            { name: "张梓阳", math: 62, english: 30, comment: "你在基础阅读信息提取上有优势，但词汇语法细节、句型转换、书面表达是薄弱点。你在基础计算和部分应用题思路上有优势，但逻辑推理的严谨性、运算步骤的规范性、应用题策略的全面性需要加强。" },
+            { name: "邓欣妍", math: 90, english: 43, comment: "数学要强化思维和应用题建模，英语要狠抓语法和写作，多练习、多总结，成绩会稳步提升！" },
+            { name: "张梓霖", math: 98, english: null, comment: "基础在夯实，但知识的精准度和拓展思维还得下功夫，坚持练习、总结，成绩会更稳地提升！" },
+            { name: "危明浩", math: null, english: null, comment: "暂未考" },
+            { name: "危明杰", math: null, english: null, comment: "暂未考" },
+            { name: "邓梓阳", math: null, english: null, comment: "暂未考" },
+            { name: "李奕涵", math: null, english: null, comment: "暂未考" },
+            { name: "彭紫琴", math: null, english: null, comment: "暂未考" },
+            { name: "张姝悦", math: null, english: null, comment: "暂未考" },
+            { name: "廖睿阳", math: 10, english: null, comment: "基础不牢是大问题，从计算到概念再到应用，都得逐个突破，多练习、多总结，把漏洞补上，数学才能越学越好呀！" },
+            { name: "苏梓睿", math: 80, english: null, comment: "你在基础计算和部分应用题思路上有优势，但逻辑推理的严谨性、运算步骤的规范性、应用题策略的全面性是薄弱点。" },
+            { name: "林昱妃", math: 75, english: 71 , comment: "你在基础词汇和阅读信息提取上有优势，但词汇拼写、语法运用、写作表达是薄弱点，针对性加强这些板块的学习和练习，英语水平会有明显进步，加油！" },
+            { name: "李景逸", math: null, english: 78, comment: "在基础认知方面表现优异，无论是看图认单词，还是简单对话类题目，正确率都很高，基础词汇和日常交流用语掌握得十分扎实。从中能看出孩子端正的学习态度，课堂知识吸收效果良好，非常值得肯定！美中不足的是，孩子在椅子相关题目上出现了一处失误，后续建议多关注同类物品的词汇辨析，通过一些分类练习加以巩固。相信在持续努力下，孩子的英语学习一定会更上一层楼。" },
+            { name: "段书锦", math: null, english: null, comment: "暂未考" }
+        ];
+
+        // 页面加载时自动计算并展示最佳学生
+        window.onload = function() {
+            displayBestStudent();
+        };
+
+        // 计算最佳学生（数学成绩最高）
+        function displayBestStudent() {
+            const bestStudentDiv = document.getElementById("bestStudentInfo");
+            
+            // 过滤掉未考试的学生（math和english均为null）
+            const validStudents = studentData.filter(student => 
+                student.math !== null || student.english !== null
+            );
+
+            if (validStudents.length === 0) {
+                bestStudentDiv.innerHTML = "<p>暂无有效成绩数据</p>";
+                return;
+            }
+
+            // 找出数学成绩最高的学生（若数学成绩相同，则比较英语成绩）
+            const bestStudent = validStudents.reduce((best, current) => {
+                const bestMath = best.math !== null ? best.math : -Infinity;
+                const currentMath = current.math !== null ? current.math : -Infinity;
+                
+                if (currentMath > bestMath) {
+                    return current;
+                } else if (currentMath === bestMath) {
+                    // 如果数学成绩相同，比较英语成绩
+                    const bestEnglish = best.english !== null ? best.english : -Infinity;
+                    const currentEnglish = current.english !== null ? current.english : -Infinity;
+                    return currentEnglish > bestEnglish ? current : best;
+                } else {
+                    return best;
+                }
+            });
+
+            // 显示最佳学生信息
+            bestStudentDiv.innerHTML = `
+                <p><strong>姓名：</strong>${bestStudent.name}</p>
+                <table>
+                    <tr>
+                        <th>数学</th>
+                        <th>英语</th>
+                    </tr>
+                    <tr>
+                        <td>${bestStudent.math !== null ? bestStudent.math : "未考试"}</td>
+                        <td>${bestStudent.english !== null ? bestStudent.english : "未考试"}</td>
+                    </tr>
+                </table>
+                <p><strong>教师评语：</strong>${bestStudent.comment}</p>
+                <p style="color: #4CAF50; font-weight: bold;">🌟 恭喜${bestStudent.name}成为本周学习之星！</p>
+            `;
+        }
+
+        // 查询学生功能（保持原逻辑）
+        function searchStudent() {
+            const searchName = document.getElementById("searchName").value.trim();
+            const resultDiv = document.getElementById("result");
+            const studentInfoDiv = document.getElementById("studentInfo");
+            
+            if (!searchName) {
+                alert("请输入学生姓名");
+                return;
+            }
+            
+            const student = studentData.find(s => s.name === searchName);
+            
+            if (student) {
+                studentInfoDiv.innerHTML = `
+                    <p><strong>姓名：</strong>${student.name}</p>
+                    <table>
+                        <tr>
+                            <th>数学</th>
+                            <th>英语</th>
+                        </tr>
+                        <tr>
+                            <td>${student.math !== null ? student.math : "未考试"}</td>
+                            <td>${student.english !== null ? student.english : "未考试"}</td>
+                        </tr>
+                    </table>
+                    <p><strong>教师评语：</strong>${student.comment}</p>
+                `;
+                resultDiv.style.display = "block";
+            } else {
+                studentInfoDiv.innerHTML = "<p>未找到该学生的记录</p>";
+                resultDiv.style.display = "block";
+            }
+        }
+    </script>
+</body>
+</html>
